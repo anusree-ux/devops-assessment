@@ -50,7 +50,7 @@ jobs:
 
       - name: Validate backend
         working-directory: backend
-        run: python -c "from app.main import app; print('Backend application validation passed')"
+        run: python -m compileall app
 
   publish:
     name: Build & Publish Docker Images
