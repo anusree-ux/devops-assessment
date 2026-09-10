@@ -2,7 +2,7 @@ import axios from "axios";
 
 // Include VITE_API_BASE_URL in the environment or as secret in CI
 const API_BASE_URL =
-    import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000/api";
+    import.meta.env.VITE_API_BASE_URL ?? "http://api.debyez.localhost/api";
 
 export const apiClient = axios.create({
     baseURL: API_BASE_URL,

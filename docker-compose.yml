@@ -1,4 +1,24 @@
 services:
+  traefik:
+    image: traefik:v3.6
+
+    command:
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:80
+
+    ports:
+      - "80:80"
+
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+    networks:
+      - proxy
+
+    restart: unless-stopped
+
+
   db:
     image: postgres:16-alpine
     environment:
@@ -73,8 +93,17 @@ services:
       db:
         condition: service_healthy
 
-    ports:
-      - "8000:8000"
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=devops-assessment_proxy
+      - traefik.http.routers.backend.rule=Host(`api.debyez.localhost`)
+      - traefik.http.routers.backend.entrypoints=web
+      - traefik.http.services.backend.loadbalancer.server.port=8000
+
+    networks:
+      - proxy
+      - default
+
 
     healthcheck:
       test:
@@ -95,8 +124,15 @@ services:
     build:
       context: ./frontend
 
-    ports:
-      - "8080:8080"
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=devops-assessment_proxy
+      - traefik.http.routers.frontend.rule=Host(`app.debyez.localhost`)
+      - traefik.http.routers.frontend.entrypoints=web
+      - traefik.http.services.frontend.loadbalancer.server.port=8080
+      
+    networks:
+      - proxy
 
     depends_on:
       backend:
@@ -115,3 +151,6 @@ services:
 volumes:
   postgres_data:
   minio_data:
+
+networks:
+  proxy:
