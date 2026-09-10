@@ -7,3 +7,5 @@
 *.log
 .env
 backend/.env
+
+.env.prod
