@@ -1,0 +1,34 @@
+#!/bin/bash
+
+case "$1" in
+    start)
+        echo "Starting local development application..."
+        docker compose up --build -d
+        ;;
+
+    stop)
+        echo "Stopping application..."
+        docker compose down
+        ;;
+
+    restart)
+        echo "Restarting application..."
+        docker compose down
+        docker compose up --build -d
+        ;;
+
+    status)
+        echo "Application Status:"
+        docker compose ps
+        ;;
+
+    logs)
+        echo "Showing application logs..."
+        docker compose logs -f
+        ;;
+
+    *)
+        echo "Usage: ./scripts/local.sh {start|stop|restart|status|logs}"
+        exit 1
+        ;;
+esac
