@@ -1,30 +1,34 @@
 #!/bin/bash
 
+set -e
+
+COMPOSE="docker compose --env-file .env"
+
 case "$1" in
     start)
         echo "Starting local development application..."
-        docker compose up --build -d
+        $COMPOSE up --build -d
         ;;
 
     stop)
         echo "Stopping application..."
-        docker compose down
+        $COMPOSE down
         ;;
 
     restart)
         echo "Restarting application..."
-        docker compose down
-        docker compose up --build -d
+        $COMPOSE down
+        $COMPOSE up --build -d
         ;;
 
     status)
         echo "Application Status:"
-        docker compose ps
+        $COMPOSE ps
         ;;
 
     logs)
         echo "Showing application logs..."
-        docker compose logs -f
+        $COMPOSE logs -f
         ;;
 
     *)

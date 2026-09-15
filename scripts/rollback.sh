@@ -13,7 +13,7 @@ echo "Pulling previously published images..."
 IMAGE_TAG="$KNOWN_GOOD_VERSION" $COMPOSE pull backend frontend
 
 echo "Starting known-good version..."
-IMAGE_TAG="$KNOWN_GOOD_VERSION" $COMPOSE up -d backend frontend
+IMAGE_TAG="$KNOWN_GOOD_VERSION" $COMPOSE up -d
 
 echo "Waiting for application to become healthy..."
 sleep 10

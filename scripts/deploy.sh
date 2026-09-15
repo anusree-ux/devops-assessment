@@ -23,7 +23,7 @@ echo "Pulling published images from Docker Hub..."
 IMAGE_TAG="$NEW_VERSION" $COMPOSE pull backend frontend
 
 echo "Starting application..."
-IMAGE_TAG="$NEW_VERSION" $COMPOSE up -d backend frontend
+IMAGE_TAG="$NEW_VERSION" $COMPOSE up -d
 
 echo "Waiting for application to become healthy..."
 sleep 10

@@ -1,3 +1,5 @@
+name: devops-assessment
+
 services:
   traefik:
     image: traefik:v3.6
@@ -16,13 +18,13 @@ services:
   db:
     image: postgres:16-alpine
     environment:
-      POSTGRES_DB: ${DB_NAME}
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - postgres_data_prod:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -37,9 +39,18 @@ services:
     command: server /data --console-address ":9001"
     volumes:
       - minio_data_prod:/data
-    ports:
-      - "9000:9000"
-      - "9001:9001"
+
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=devops-assessment_proxy
+      - traefik.http.routers.minio.rule=Host(`s3.debyez.localhost`)
+      - traefik.http.routers.minio.entrypoints=web
+      - traefik.http.services.minio.loadbalancer.server.port=9000
+
+    networks:
+      - proxy
+      - default
+  
     healthcheck:
       test: ["CMD", "mc", "ready", "local"]
       interval: 10s
@@ -49,7 +60,7 @@ services:
     restart: unless-stopped
 
   backend:
-    image: anusree15/devops-assessment-backend:${IMAGE_TAG}
+    image: ${DOCKERHUB_USERNAME}/devops-assessment-backend:${IMAGE_TAG}
     environment:
       DB_HOST: db
       DB_PORT: 5432
@@ -59,8 +70,8 @@ services:
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
       AWS_REGION: ${AWS_REGION}
-      S3_ENDPOINT_URL: http://minio:9000
-      S3_PUBLIC_ENDPOINT_URL: http://localhost:9000
+      S3_ENDPOINT_URL: ${S3_ENDPOINT_URL}
+      S3_PUBLIC_ENDPOINT_URL: ${S3_PUBLIC_ENDPOINT_URL}
       S3_BUCKET_NAME: ${S3_BUCKET_NAME}
       PRESIGNED_URL_EXPIRATION_SECONDS: ${PRESIGNED_URL_EXPIRATION_SECONDS}
       CORS_ORIGINS: ${CORS_ORIGINS}
@@ -84,7 +95,7 @@ services:
           "CMD",
           "python",
           "-c",
-          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health')"
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health/full')"
         ]
       interval: 15s
       timeout: 5s
@@ -93,7 +104,7 @@ services:
     restart: unless-stopped
 
   frontend:
-    image: anusree15/devops-assessment-frontend:${IMAGE_TAG}
+    image: ${DOCKERHUB_USERNAME}/devops-assessment-frontend:${IMAGE_TAG}
     depends_on:
       backend:
         condition: service_healthy

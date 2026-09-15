@@ -1,3 +1,5 @@
+name: devops-assessment
+
 services:
   traefik:
     image: traefik:v3.6
@@ -50,9 +52,16 @@ services:
     volumes:
       - minio_data:/data
 
-    ports:
-      - "9000:9000"
-      - "9001:9001"
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=devops-assessment_proxy
+      - traefik.http.routers.minio.rule=Host(`s3.debyez.localhost`)
+      - traefik.http.routers.minio.entrypoints=web
+      - traefik.http.services.minio.loadbalancer.server.port=9000
+
+    networks:
+      - proxy
+      - default
 
     healthcheck:
       test: ["CMD", "mc", "ready", "local"]
@@ -92,6 +101,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      minio:
+        condition: service_healthy
 
     labels:
       - traefik.enable=true
@@ -111,7 +122,7 @@ services:
           "CMD",
           "python",
           "-c",
-          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health')"
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health/full')"
         ]
       interval: 15s
       timeout: 5s
@@ -123,6 +134,8 @@ services:
   frontend:
     build:
       context: ./frontend
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL}
 
     labels:
       - traefik.enable=true
