@@ -23,7 +23,13 @@ echo "Pulling published images from Docker Hub..."
 IMAGE_TAG="$NEW_VERSION" $COMPOSE pull backend frontend
 
 echo "Starting application..."
-IMAGE_TAG="$NEW_VERSION" $COMPOSE up -d
+if ! IMAGE_TAG="$NEW_VERSION" $COMPOSE up -d; then
+    echo "Deployment startup FAILED."
+    echo "Starting automatic rollback..."
+    ./scripts/rollback.sh
+    exit 1
+fi
+
 
 echo "Waiting for application to become healthy..."
 sleep 10
